@@ -1,0 +1,86 @@
+package auth
+
+import (
+	"SSO/internal/domain/models"
+	"SSO/internal/pkg/jwt"
+	"SSO/internal/storage"
+	"SSO/internal/storage/storageErrors"
+	"context"
+	"errors"
+	"golang.org/x/crypto/bcrypt"
+	"log/slog"
+	"time"
+)
+
+var (
+	ErrInvalidCredentials = errors.New("invalid credentials")
+)
+
+type AppProvider interface {
+	GetByKey(ctx context.Context, key []byte) (models.App, error)
+}
+
+type Auth struct {
+	l           *slog.Logger
+	userStorage storage.UserStorage
+	appProvider AppProvider
+	tokenTTL    time.Duration
+}
+
+func New(l *slog.Logger, userStorage storage.UserStorage, appProvider AppProvider, tokenTTL time.Duration) *Auth {
+	return &Auth{
+		l:           l,
+		userStorage: userStorage,
+		appProvider: appProvider,
+		tokenTTL:    tokenTTL,
+	}
+}
+
+func (a *Auth) Register(ctx context.Context, appKey []byte, login string, password string) error {
+	passHash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+	app, err := a.appProvider.GetByKey(ctx, appKey)
+	if err != nil {
+		return err
+	}
+	if err := a.userStorage.Save(ctx, app.Id, login, passHash); err != nil {
+		return err
+	}
+	a.l.Info("register user %s", login)
+	return nil
+}
+
+func (a *Auth) Login(ctx context.Context, appKey []byte, login string, password string) (string, error) {
+	app, err := a.appProvider.GetByKey(ctx, appKey)
+	if err != nil {
+		return "", err
+	}
+
+	user, err := a.userStorage.Get(ctx, app.Id, login)
+	if err != nil {
+		if errors.Is(err, storageErrors.ErrUserNotFound) {
+			a.l.Info("user %s, app:%d not found", login, app.Id)
+			return "", ErrInvalidCredentials
+		}
+		return "", err
+	}
+
+	if err := bcrypt.CompareHashAndPassword(user.PasswordHash, []byte(password)); err != nil {
+		return "", ErrInvalidCredentials
+	}
+
+	token, err := jwt.NewToken(user, app, a.tokenTTL)
+	if err != nil {
+		return "", err
+	}
+	return token, nil
+}
+
+func Err(err error) slog.Attr {
+	return slog.Attr{
+		Key:   "error",
+		Value: slog.StringValue(err.Error()),
+	}
+}

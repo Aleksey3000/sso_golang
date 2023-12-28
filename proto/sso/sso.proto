@@ -1,0 +1,69 @@
+syntax = "proto3";
+package sso;
+
+option go_package = "sso.v1;ssov1";
+
+service App {
+  rpc NewApp(NewAppRequest) returns (NewAppResponse);
+}
+
+service Auth {
+  rpc Register(RegisterRequest) returns (RegisterResponse);
+  rpc Login(LoginRequest) returns (LoginResponse);
+
+}
+
+service Permissions {
+  rpc SetUserPermission(SetUserPermissionRequest) returns (SetUserPermissionResponse);
+  rpc GetUserPermission(GetUserPermissionRequest) returns (GetUserPermissionResponse);
+}
+
+// App
+
+message NewAppRequest {
+}
+
+message NewAppResponse {
+  bytes key = 1;
+}
+
+// Auth
+
+message RegisterRequest {
+  string login = 1;
+  string password = 2;
+  bytes  app_key = 3;
+}
+
+message RegisterResponse {
+}
+
+message LoginRequest {
+  string login = 1;
+  string password = 2;
+  bytes  app_key = 3;
+}
+
+message LoginResponse {
+  string token = 1;
+}
+
+// Permissions
+
+message GetUserPermissionRequest {
+  string login = 1;
+  bytes  app_key = 2;
+}
+
+message GetUserPermissionResponse {
+  int32 permission = 1;
+}
+
+message SetUserPermissionRequest {
+  string login = 1;
+  bytes  app_key = 2;
+  int32 permission = 3;
+}
+
+message SetUserPermissionResponse {
+}
