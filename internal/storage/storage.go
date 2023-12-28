@@ -26,11 +26,14 @@ type Storage struct {
 }
 
 func New(cnf *config.DBConfig) (*Storage, error) {
+	const op = "storage.New"
 	db, err := sql.Open("mysql",
 		fmt.Sprintf("%s:%s@tcp(%s)/%s", cnf.User, cnf.Password, cnf.Server, cnf.DBName))
-
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+	if err := db.Ping(); err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 	return &Storage{
 		UserStorage: mysql.NewUserStorage(db),

@@ -44,8 +44,8 @@ func (s *Server) Register(ctx context.Context, in *ssov1.RegisterRequest) (*ssov
 		if errors.Is(err, storageErrors.ErrUserExists) {
 			return nil, status.Error(codes.AlreadyExists, "user already exists")
 		}
-
-		return nil, status.Error(codes.Internal, err.Error()) //"failed to register user"
+		
+		return nil, status.Error(codes.Internal, "failed to register user")
 	}
 
 	return &ssov1.RegisterResponse{}, nil
