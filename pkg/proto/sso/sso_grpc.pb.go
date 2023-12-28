@@ -18,86 +18,122 @@ import (
 // Requires gRPC-Go v1.32.0 or later.
 const _ = grpc.SupportPackageIsVersion7
 
-// AppClient is the client API for App service.
+// AppsClient is the client API for Apps service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-type AppClient interface {
+type AppsClient interface {
 	NewApp(ctx context.Context, in *NewAppRequest, opts ...grpc.CallOption) (*NewAppResponse, error)
+	DeleteApp(ctx context.Context, in *DeleteAppRequest, opts ...grpc.CallOption) (*DeleteAppResponse, error)
 }
 
-type appClient struct {
+type appsClient struct {
 	cc grpc.ClientConnInterface
 }
 
-func NewAppClient(cc grpc.ClientConnInterface) AppClient {
-	return &appClient{cc}
+func NewAppsClient(cc grpc.ClientConnInterface) AppsClient {
+	return &appsClient{cc}
 }
 
-func (c *appClient) NewApp(ctx context.Context, in *NewAppRequest, opts ...grpc.CallOption) (*NewAppResponse, error) {
+func (c *appsClient) NewApp(ctx context.Context, in *NewAppRequest, opts ...grpc.CallOption) (*NewAppResponse, error) {
 	out := new(NewAppResponse)
-	err := c.cc.Invoke(ctx, "/sso.App/NewApp", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/sso.Apps/NewApp", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// AppServer is the server API for App service.
-// All implementations must embed UnimplementedAppServer
+func (c *appsClient) DeleteApp(ctx context.Context, in *DeleteAppRequest, opts ...grpc.CallOption) (*DeleteAppResponse, error) {
+	out := new(DeleteAppResponse)
+	err := c.cc.Invoke(ctx, "/sso.Apps/DeleteApp", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// AppsServer is the server API for Apps service.
+// All implementations must embed UnimplementedAppsServer
 // for forward compatibility
-type AppServer interface {
+type AppsServer interface {
 	NewApp(context.Context, *NewAppRequest) (*NewAppResponse, error)
-	mustEmbedUnimplementedAppServer()
+	DeleteApp(context.Context, *DeleteAppRequest) (*DeleteAppResponse, error)
+	mustEmbedUnimplementedAppsServer()
 }
 
-// UnimplementedAppServer must be embedded to have forward compatible implementations.
-type UnimplementedAppServer struct {
+// UnimplementedAppsServer must be embedded to have forward compatible implementations.
+type UnimplementedAppsServer struct {
 }
 
-func (UnimplementedAppServer) NewApp(context.Context, *NewAppRequest) (*NewAppResponse, error) {
+func (UnimplementedAppsServer) NewApp(context.Context, *NewAppRequest) (*NewAppResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method NewApp not implemented")
 }
-func (UnimplementedAppServer) mustEmbedUnimplementedAppServer() {}
+func (UnimplementedAppsServer) DeleteApp(context.Context, *DeleteAppRequest) (*DeleteAppResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteApp not implemented")
+}
+func (UnimplementedAppsServer) mustEmbedUnimplementedAppsServer() {}
 
-// UnsafeAppServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interface is not recommended, as added methods to AppServer will
+// UnsafeAppsServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to AppsServer will
 // result in compilation errors.
-type UnsafeAppServer interface {
-	mustEmbedUnimplementedAppServer()
+type UnsafeAppsServer interface {
+	mustEmbedUnimplementedAppsServer()
 }
 
-func RegisterAppServer(s grpc.ServiceRegistrar, srv AppServer) {
-	s.RegisterService(&App_ServiceDesc, srv)
+func RegisterAppsServer(s grpc.ServiceRegistrar, srv AppsServer) {
+	s.RegisterService(&Apps_ServiceDesc, srv)
 }
 
-func _App_NewApp_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Apps_NewApp_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(NewAppRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(AppServer).NewApp(ctx, in)
+		return srv.(AppsServer).NewApp(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/sso.App/NewApp",
+		FullMethod: "/sso.Apps/NewApp",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AppServer).NewApp(ctx, req.(*NewAppRequest))
+		return srv.(AppsServer).NewApp(ctx, req.(*NewAppRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-// App_ServiceDesc is the grpc.ServiceDesc for App service.
+func _Apps_DeleteApp_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteAppRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AppsServer).DeleteApp(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/sso.Apps/DeleteApp",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AppsServer).DeleteApp(ctx, req.(*DeleteAppRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+// Apps_ServiceDesc is the grpc.ServiceDesc for Apps service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
-var App_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "sso.App",
-	HandlerType: (*AppServer)(nil),
+var Apps_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "sso.Apps",
+	HandlerType: (*AppsServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
 			MethodName: "NewApp",
-			Handler:    _App_NewApp_Handler,
+			Handler:    _Apps_NewApp_Handler,
+		},
+		{
+			MethodName: "DeleteApp",
+			Handler:    _Apps_DeleteApp_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

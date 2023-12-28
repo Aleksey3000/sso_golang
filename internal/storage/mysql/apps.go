@@ -6,6 +6,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 )
 
 type AppStorage struct {
@@ -19,7 +20,7 @@ func NewAppStorage(db *sql.DB) *AppStorage {
 }
 
 func (a *AppStorage) Save(ctx context.Context, key []byte) error {
-	if _, err := a.db.ExecContext(ctx, "INSERT INTO apps (key) VALUES (?)", key); err != nil {
+	if _, err := a.db.ExecContext(ctx, "INSERT INTO apps (secret_key) VALUES (?)", key); err != nil {
 		return err
 	}
 	return nil
@@ -36,4 +37,12 @@ func (a *AppStorage) GetByKey(ctx context.Context, key []byte) (models.App, erro
 		return app, err
 	}
 	return app, nil
+}
+
+func (a *AppStorage) DeleteByKey(ctx context.Context, key []byte) error {
+	const op = "mysql.AppStorage.DeleteByKey"
+	if _, err := a.db.ExecContext(ctx, "DELETE FROM apps WHERE secret_key=?", key); err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+	return nil
 }

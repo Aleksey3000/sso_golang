@@ -16,23 +16,23 @@ var (
 	ErrInvalidCredentials = errors.New("invalid credentials")
 )
 
-type AppProvider interface {
+type AppsProvider interface {
 	GetByKey(ctx context.Context, key []byte) (models.App, error)
 }
 
 type Auth struct {
-	l           *slog.Logger
-	userStorage storage.UserStorage
-	appProvider AppProvider
-	tokenTTL    time.Duration
+	l            *slog.Logger
+	userStorage  storage.UserStorage
+	appsProvider AppsProvider
+	tokenTTL     time.Duration
 }
 
-func New(l *slog.Logger, userStorage storage.UserStorage, appProvider AppProvider, tokenTTL time.Duration) *Auth {
+func New(l *slog.Logger, userStorage storage.UserStorage, appProvider AppsProvider, tokenTTL time.Duration) *Auth {
 	return &Auth{
-		l:           l,
-		userStorage: userStorage,
-		appProvider: appProvider,
-		tokenTTL:    tokenTTL,
+		l:            l,
+		userStorage:  userStorage,
+		appsProvider: appProvider,
+		tokenTTL:     tokenTTL,
 	}
 }
 
@@ -41,7 +41,7 @@ func (a *Auth) Register(ctx context.Context, appKey []byte, login string, passwo
 	if err != nil {
 		return err
 	}
-	app, err := a.appProvider.GetByKey(ctx, appKey)
+	app, err := a.appsProvider.GetByKey(ctx, appKey)
 	if err != nil {
 		return err
 	}
@@ -53,7 +53,7 @@ func (a *Auth) Register(ctx context.Context, appKey []byte, login string, passwo
 }
 
 func (a *Auth) Login(ctx context.Context, appKey []byte, login string, password string) (string, error) {
-	app, err := a.appProvider.GetByKey(ctx, appKey)
+	app, err := a.appsProvider.GetByKey(ctx, appKey)
 	if err != nil {
 		return "", err
 	}
@@ -73,6 +73,7 @@ func (a *Auth) Login(ctx context.Context, appKey []byte, login string, password 
 
 	token, err := jwt.NewToken(user, app, a.tokenTTL)
 	if err != nil {
+		a.l.Error("failed generate token", Err(err))
 		return "", err
 	}
 	return token, nil

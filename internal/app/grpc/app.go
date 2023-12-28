@@ -22,7 +22,7 @@ type App struct {
 
 // protoc -I proto proto/sso/sso.proto --go_out=./pkg/proto/ --go_opt=paths=source_relative --go-grpc_out=./pkg/proto/ --go-grpc_opt=paths=source_relative
 
-func New(l *slog.Logger, authService auth.Auth, cnf *config.BindConfig) *App {
+func New(l *slog.Logger, authService auth.Auth, appsService auth.Apps, cnf *config.BindConfig) *App {
 	loggingOpts := []logging.Option{
 		logging.WithLogOnEvents(
 			logging.PayloadReceived, logging.PayloadSent,
@@ -41,7 +41,7 @@ func New(l *slog.Logger, authService auth.Auth, cnf *config.BindConfig) *App {
 		logging.UnaryServerInterceptor(interceptorLog(l), loggingOpts...),
 	))
 
-	auth.RegisterServer(grpcServer, authService)
+	auth.RegisterServer(grpcServer, authService, appsService)
 
 	return &App{
 		l:          l,
@@ -51,7 +51,6 @@ func New(l *slog.Logger, authService auth.Auth, cnf *config.BindConfig) *App {
 }
 
 func (a *App) Run() error {
-
 	listener, err := net.Listen("tcp", fmt.Sprintf("%s:%s", a.bindCnf.Addr, a.bindCnf.Port))
 	if err != nil {
 		return err

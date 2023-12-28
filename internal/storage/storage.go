@@ -15,14 +15,15 @@ type UserStorage interface {
 	Get(ctx context.Context, appId int32, login string) (models.User, error)
 }
 
-type AppStorage interface {
+type AppsStorage interface {
 	Save(ctx context.Context, key []byte) error
 	GetByKey(ctx context.Context, key []byte) (models.App, error)
+	DeleteByKey(ctx context.Context, key []byte) error
 }
 
 type Storage struct {
 	UserStorage UserStorage
-	AppStorage  AppStorage
+	AppStorage  AppsStorage
 }
 
 func New(cnf *config.DBConfig) (*Storage, error) {

@@ -3,7 +3,7 @@ package auth
 import (
 	"SSO/internal/service/auth"
 	"SSO/internal/storage/storageErrors"
-	ssov1 "SSO/pkg/proto/sso"
+	ssoV1 "SSO/pkg/proto/sso"
 	"errors"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
@@ -11,9 +11,17 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-type Server struct {
-	ssov1.UnimplementedAuthServer
+type SSOServer struct {
+	ssoV1.UnimplementedAuthServer
+	ssoV1.UnimplementedAppsServer
+	ssoV1.UnimplementedPermissionsServer
 	auth Auth
+	apps Apps
+}
+
+type Apps interface {
+	NewApp(ctx context.Context) (key []byte, err error)
+	DeleteApp(ctx context.Context, key []byte) (err error)
 }
 
 type Auth interface {
@@ -21,13 +29,16 @@ type Auth interface {
 	Login(ctx context.Context, appKey []byte, login string, password string) (token string, err error)
 }
 
-func RegisterServer(server *grpc.Server, auth Auth) {
-	ssov1.RegisterAuthServer(server, &Server{
+func RegisterServer(server *grpc.Server, auth Auth, apps Apps) {
+	ssoServer := &SSOServer{
 		auth: auth,
-	})
+		apps: apps,
+	}
+	ssoV1.RegisterAuthServer(server, ssoServer)
+	ssoV1.RegisterAppsServer(server, ssoServer)
 }
 
-func (s *Server) Register(ctx context.Context, in *ssov1.RegisterRequest) (*ssov1.RegisterResponse, error) {
+func (s *SSOServer) Register(ctx context.Context, in *ssoV1.RegisterRequest) (*ssoV1.RegisterResponse, error) {
 	if in.Login == "" {
 		return nil, status.Error(codes.InvalidArgument, "email is required")
 	}
@@ -44,14 +55,14 @@ func (s *Server) Register(ctx context.Context, in *ssov1.RegisterRequest) (*ssov
 		if errors.Is(err, storageErrors.ErrUserExists) {
 			return nil, status.Error(codes.AlreadyExists, "user already exists")
 		}
-		
+
 		return nil, status.Error(codes.Internal, "failed to register user")
 	}
 
-	return &ssov1.RegisterResponse{}, nil
+	return &ssoV1.RegisterResponse{}, nil
 }
 
-func (s *Server) Login(ctx context.Context, in *ssov1.LoginRequest) (*ssov1.LoginResponse, error) {
+func (s *SSOServer) Login(ctx context.Context, in *ssoV1.LoginRequest) (*ssoV1.LoginResponse, error) {
 	if in.Login == "" {
 		return nil, status.Error(codes.InvalidArgument, "login is required")
 	}
@@ -70,5 +81,22 @@ func (s *Server) Login(ctx context.Context, in *ssov1.LoginRequest) (*ssov1.Logi
 		return nil, status.Error(codes.Internal, "failed to login")
 	}
 
-	return &ssov1.LoginResponse{Token: token}, nil
+	return &ssoV1.LoginResponse{Token: token}, nil
+}
+
+func (s *SSOServer) NewApp(ctx context.Context, _ *ssoV1.NewAppRequest) (*ssoV1.NewAppResponse, error) {
+	key, err := s.apps.NewApp(ctx)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "failed create app")
+	}
+
+	return &ssoV1.NewAppResponse{Key: key}, nil
+}
+
+func (s *SSOServer) DeleteApp(ctx context.Context, in *ssoV1.DeleteAppRequest) (*ssoV1.DeleteAppResponse, error) {
+	err := s.apps.DeleteApp(ctx, in.Key)
+	if err != nil {
+		return &ssoV1.DeleteAppResponse{}, status.Error(codes.Internal, "failed delete app")
+	}
+	return &ssoV1.DeleteAppResponse{}, nil
 }

@@ -15,8 +15,8 @@ func main() {
 		panic(err)
 	}
 	l := SetupLogger()
-	l.Info("%+v", cnf)
-	l.Info(os.Args[0])
+	l.Info("Config: ", cnf)
+	l.Info("PATH ", os.Args[0])
 	App := app.New(l, cnf)
 	defer App.GRPCApp.Stop()
 	if err := App.GRPCApp.Run(); err != nil {

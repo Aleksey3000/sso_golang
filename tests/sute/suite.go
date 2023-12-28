@@ -17,6 +17,7 @@ type Suite struct {
 	*testing.T                  // Потребуется для вызова методов *testing.T
 	Cnf        *config.Config   // Конфигурация приложения
 	AuthClient ssoV1.AuthClient // Клиент для взаимодействия с gRPC-сервером Auth
+	AppsClient ssoV1.AppsClient
 }
 
 func New(t *testing.T) (context.Context, *Suite) {
@@ -47,10 +48,11 @@ func New(t *testing.T) (context.Context, *Suite) {
 	}
 
 	authClient := ssoV1.NewAuthClient(cc)
-
+	appsClient := ssoV1.NewAppsClient(cc)
 	return ctx, &Suite{
 		T:          t,
 		Cnf:        cnf,
 		AuthClient: authClient,
+		AppsClient: appsClient,
 	}
 }
