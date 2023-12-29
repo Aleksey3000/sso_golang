@@ -20,8 +20,6 @@ type App struct {
 	bindCnf    *config.BindConfig
 }
 
-// protoc -I proto proto/sso/sso.proto --go_out=./pkg/proto/ --go_opt=paths=source_relative --go-grpc_out=./pkg/proto/ --go-grpc_opt=paths=source_relative
-
 func New(l *slog.Logger, authService auth.Auth, appsService auth.Apps, cnf *config.BindConfig) *App {
 	loggingOpts := []logging.Option{
 		logging.WithLogOnEvents(
