@@ -19,11 +19,20 @@ type AppsStorage interface {
 	Save(ctx context.Context, key []byte) error
 	GetByKey(ctx context.Context, key []byte) (models.App, error)
 	DeleteByKey(ctx context.Context, key []byte) error
+	TestOnExist(ctx context.Context, key []byte) bool
+}
+
+type PermissionsStorage interface {
+	Save(ctx context.Context, userId int, value int32) error
+	Get(ctx context.Context, userId int) (int32, error)
+	Update(ctx context.Context, userId int, value int32) error
+	Delete(ctx context.Context, userId int) error
 }
 
 type Storage struct {
-	UserStorage UserStorage
-	AppStorage  AppsStorage
+	UserStorage        UserStorage
+	AppStorage         AppsStorage
+	PermissionsStorage PermissionsStorage
 }
 
 func New(cnf *config.DBConfig) (*Storage, error) {
@@ -37,7 +46,8 @@ func New(cnf *config.DBConfig) (*Storage, error) {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 	return &Storage{
-		UserStorage: mysql.NewUserStorage(db),
-		AppStorage:  mysql.NewAppStorage(db),
+		UserStorage:        mysql.NewUserStorage(db),
+		AppStorage:         mysql.NewAppStorage(db),
+		PermissionsStorage: mysql.NewPermissionsStorage(db),
 	}, nil
 }

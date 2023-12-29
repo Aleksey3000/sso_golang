@@ -59,8 +59,8 @@ message LoginResponse {
 // Permissions
 
 message GetUserPermissionRequest {
-  string login = 1;
-  bytes  app_key = 2;
+  int64 user_id = 1;
+  bytes app_key = 2;
 }
 
 message GetUserPermissionResponse {
@@ -68,9 +68,9 @@ message GetUserPermissionResponse {
 }
 
 message SetUserPermissionRequest {
-  string login = 1;
-  bytes  app_key = 2;
-  int32 permission = 3;
+  int64 user_id = 1;
+  int32 permission = 2;
+  bytes app_key = 3;
 }
 
 message SetUserPermissionResponse {

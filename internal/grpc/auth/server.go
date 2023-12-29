@@ -15,13 +15,16 @@ type SSOServer struct {
 	ssoV1.UnimplementedAuthServer
 	ssoV1.UnimplementedAppsServer
 	ssoV1.UnimplementedPermissionsServer
-	auth Auth
-	apps Apps
+
+	auth        Auth
+	apps        Apps
+	permissions Permissions
 }
 
 type Apps interface {
 	NewApp(ctx context.Context) (key []byte, err error)
 	DeleteApp(ctx context.Context, key []byte) (err error)
+	TestOnExist(ctx context.Context, key []byte) bool
 }
 
 type Auth interface {
@@ -29,13 +32,20 @@ type Auth interface {
 	Login(ctx context.Context, appKey []byte, login string, password string) (token string, err error)
 }
 
-func RegisterServer(server *grpc.Server, auth Auth, apps Apps) {
+type Permissions interface {
+	SetUserPermission(ctx context.Context, userId int, permission int32) (err error)
+	GetUserPermission(ctx context.Context, userId int) (permission int32, err error)
+}
+
+func RegisterServer(server *grpc.Server, auth Auth, apps Apps, permissions Permissions) {
 	ssoServer := &SSOServer{
-		auth: auth,
-		apps: apps,
+		auth:        auth,
+		apps:        apps,
+		permissions: permissions,
 	}
 	ssoV1.RegisterAuthServer(server, ssoServer)
 	ssoV1.RegisterAppsServer(server, ssoServer)
+	ssoV1.RegisterPermissionsServer(server, ssoServer)
 }
 
 func (s *SSOServer) Register(ctx context.Context, in *ssoV1.RegisterRequest) (*ssoV1.RegisterResponse, error) {
@@ -94,9 +104,46 @@ func (s *SSOServer) NewApp(ctx context.Context, _ *ssoV1.NewAppRequest) (*ssoV1.
 }
 
 func (s *SSOServer) DeleteApp(ctx context.Context, in *ssoV1.DeleteAppRequest) (*ssoV1.DeleteAppResponse, error) {
+	if len(in.Key) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "app key is required")
+	}
 	err := s.apps.DeleteApp(ctx, in.Key)
 	if err != nil {
 		return &ssoV1.DeleteAppResponse{}, status.Error(codes.Internal, "failed delete app")
 	}
 	return &ssoV1.DeleteAppResponse{}, nil
+}
+
+func (s *SSOServer) GetUserPermission(ctx context.Context, in *ssoV1.GetUserPermissionRequest) (*ssoV1.GetUserPermissionResponse, error) {
+	if len(in.AppKey) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "app key is required")
+	}
+	if in.UserId == 0 {
+		return nil, status.Error(codes.InvalidArgument, "user id is required")
+	}
+	if !s.apps.TestOnExist(ctx, in.AppKey) {
+		return nil, status.Error(codes.FailedPrecondition, "app not found")
+	}
+	perm, err := s.permissions.GetUserPermission(ctx, int(in.UserId))
+	if err != nil {
+		return nil, status.Error(codes.Internal, "failed get user permission")
+	}
+	return &ssoV1.GetUserPermissionResponse{Permission: perm}, nil
+}
+
+func (s *SSOServer) SetUserPermission(ctx context.Context, in *ssoV1.SetUserPermissionRequest) (*ssoV1.SetUserPermissionResponse, error) {
+	if len(in.AppKey) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "app key is required")
+	}
+	if in.UserId == 0 {
+		return nil, status.Error(codes.InvalidArgument, "user id is required")
+	}
+	if !s.apps.TestOnExist(ctx, in.AppKey) {
+		return nil, status.Error(codes.FailedPrecondition, "app not found")
+	}
+	err := s.permissions.SetUserPermission(ctx, int(in.UserId), in.Permission)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "failed set permission")
+	}
+	return &ssoV1.SetUserPermissionResponse{}, nil
 }

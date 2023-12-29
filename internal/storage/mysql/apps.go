@@ -46,3 +46,9 @@ func (a *AppStorage) DeleteByKey(ctx context.Context, key []byte) error {
 	}
 	return nil
 }
+
+func (a *AppStorage) TestOnExist(ctx context.Context, key []byte) bool {
+	var count int
+	_ = a.db.QueryRowContext(ctx, "SELECT COUNT(id) FROM apps WHERE secret_key=?", key).Scan(&count)
+	return count != 0
+}

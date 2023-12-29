@@ -20,7 +20,7 @@ type App struct {
 	bindCnf    *config.BindConfig
 }
 
-func New(l *slog.Logger, authService auth.Auth, appsService auth.Apps, cnf *config.BindConfig) *App {
+func New(l *slog.Logger, authService auth.Auth, appsService auth.Apps, permService auth.Permissions, cnf *config.BindConfig) *App {
 	loggingOpts := []logging.Option{
 		logging.WithLogOnEvents(
 			logging.PayloadReceived, logging.PayloadSent,
@@ -39,7 +39,7 @@ func New(l *slog.Logger, authService auth.Auth, appsService auth.Apps, cnf *conf
 		logging.UnaryServerInterceptor(interceptorLog(l), loggingOpts...),
 	))
 
-	auth.RegisterServer(grpcServer, authService, appsService)
+	auth.RegisterServer(grpcServer, authService, appsService, permService)
 
 	return &App{
 		l:          l,

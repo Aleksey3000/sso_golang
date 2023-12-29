@@ -36,6 +36,10 @@ func (a *Apps) DeleteApp(ctx context.Context, key []byte) error {
 	return a.appsStorage.DeleteByKey(ctx, key)
 }
 
+func (a *Apps) TestOnExist(ctx context.Context, key []byte) bool {
+	return a.appsStorage.TestOnExist(ctx, key)
+}
+
 var mu sync.Mutex
 
 func GenerateUniqueString() []byte {

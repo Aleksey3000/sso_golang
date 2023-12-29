@@ -5,6 +5,7 @@ import (
 	"SSO/internal/config"
 	"SSO/internal/service/apps"
 	"SSO/internal/service/auth"
+	"SSO/internal/service/permissions"
 	"SSO/internal/storage"
 	"log/slog"
 )
@@ -21,8 +22,9 @@ func New(l *slog.Logger, cnf *config.Config) *App {
 
 	authService := auth.New(l, s.UserStorage, s.AppStorage, cnf.TokenTTL)
 	appsService := apps.New(l, s.AppStorage)
+	permService := permissions.New(l, s.PermissionsStorage)
+	grpcApp := GrpcApp.New(l, authService, appsService, permService, &cnf.BindConfig)
 
-	grpcApp := GrpcApp.New(l, authService, appsService, &cnf.BindConfig)
 	return &App{
 		GRPCApp: grpcApp,
 	}
