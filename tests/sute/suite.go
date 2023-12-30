@@ -14,9 +14,9 @@ import (
 const configPath = "C:\\Users\\79212\\GolandProjects\\SSO\\config\\config.yaml"
 
 type Suite struct {
-	*testing.T                  // Потребуется для вызова методов *testing.T
-	Cnf        *config.Config   // Конфигурация приложения
-	AuthClient ssoV1.AuthClient // Клиент для взаимодействия с gRPC-сервером Auth
+	*testing.T
+	Cnf        *config.Config
+	AuthClient ssoV1.AuthClient
 	AppsClient ssoV1.AppsClient
 	PermClient ssoV1.PermissionsClient
 }

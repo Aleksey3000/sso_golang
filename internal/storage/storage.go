@@ -13,6 +13,8 @@ import (
 type UserStorage interface {
 	Save(ctx context.Context, appId int32, login string, passwordHash []byte) error
 	Get(ctx context.Context, appId int32, login string) (models.User, error)
+	Delete(ctx context.Context, appId int32, login string) error
+	TestOnExist(ctx context.Context, appId int32, login string) (bool, error)
 }
 
 type AppsStorage interface {

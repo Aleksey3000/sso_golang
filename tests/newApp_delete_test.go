@@ -21,7 +21,6 @@ func TestNewAppDelete(t *testing.T) {
 		keys = append(keys, string(req.Key))
 
 		// Delete app
-
 		_, err = st.AppsClient.DeleteApp(ctx, &ssoV1.DeleteAppRequest{Key: req.Key})
 		require.NoError(t, err)
 

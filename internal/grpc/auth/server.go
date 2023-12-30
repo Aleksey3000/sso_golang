@@ -30,6 +30,8 @@ type Apps interface {
 type Auth interface {
 	Register(ctx context.Context, appKey []byte, login string, password string) (err error)
 	Login(ctx context.Context, appKey []byte, login string, password string) (token string, err error)
+	DeleteUser(ctx context.Context, appKey []byte, login string) (err error)
+	TestOnExist(ctx context.Context, appKey []byte, login string) bool
 }
 
 type Permissions interface {
@@ -92,6 +94,32 @@ func (s *SSOServer) Login(ctx context.Context, in *ssoV1.LoginRequest) (*ssoV1.L
 	}
 
 	return &ssoV1.LoginResponse{Token: token}, nil
+}
+
+func (s *SSOServer) DeleteUser(ctx context.Context, in *ssoV1.DeleteUserRequest) (*ssoV1.DeleteUserResponse, error) {
+	if in.Login == "" {
+		return nil, status.Error(codes.InvalidArgument, "login is required")
+	}
+	if len(in.AppKey) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "app key is required")
+	}
+	err := s.auth.DeleteUser(ctx, in.AppKey, in.Login)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "failed delete user")
+	}
+	return &ssoV1.DeleteUserResponse{}, err
+}
+
+func (s *SSOServer) TestUserOnExist(ctx context.Context, in *ssoV1.TestUserOnExistRequest) (*ssoV1.TestUserOnExistResponse, error) {
+	if in.Login == "" {
+		return nil, status.Error(codes.InvalidArgument, "login is required")
+	}
+	if len(in.AppKey) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "app key is required")
+	}
+
+	exist := s.auth.TestOnExist(ctx, in.AppKey, in.Login)
+	return &ssoV1.TestUserOnExistResponse{Exist: exist}, nil
 }
 
 func (s *SSOServer) NewApp(ctx context.Context, _ *ssoV1.NewAppRequest) (*ssoV1.NewAppResponse, error) {

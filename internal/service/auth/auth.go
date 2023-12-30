@@ -79,6 +79,33 @@ func (a *Auth) Login(ctx context.Context, appKey []byte, login string, password 
 	return token, nil
 }
 
+func (a *Auth) DeleteUser(ctx context.Context, appKey []byte, login string) error {
+	app, err := a.appsProvider.GetByKey(ctx, appKey)
+	if err != nil {
+		a.l.Error("failed get app", Err(err))
+		return err
+	}
+	if err := a.userStorage.Delete(ctx, app.Id, login); err != nil {
+		a.l.Error("failed delete user", Err(err))
+		return err
+	}
+	return nil
+}
+
+func (a *Auth) TestOnExist(ctx context.Context, appKey []byte, login string) bool {
+	app, err := a.appsProvider.GetByKey(ctx, appKey)
+	if err != nil {
+		a.l.Error("failed get app", Err(err))
+		return false
+	}
+	exist, err := a.userStorage.TestOnExist(ctx, app.Id, login)
+	if err != nil {
+		a.l.Error("failed test user on exist", Err(err))
+		return false
+	}
+	return exist
+}
+
 func Err(err error) slog.Attr {
 	return slog.Attr{
 		Key:   "error",

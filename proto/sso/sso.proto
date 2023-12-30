@@ -11,7 +11,8 @@ service Apps {
 service Auth {
   rpc Register(RegisterRequest) returns (RegisterResponse);
   rpc Login(LoginRequest) returns (LoginResponse);
-
+  rpc DeleteUser(DeleteUserRequest) returns (DeleteUserResponse);
+  rpc TestUserOnExist(TestUserOnExistRequest) returns (TestUserOnExistResponse);
 }
 
 service Permissions {
@@ -54,6 +55,23 @@ message LoginRequest {
 
 message LoginResponse {
   string token = 1;
+}
+
+message DeleteUserRequest {
+  string login = 1;
+  bytes  app_key = 3;
+}
+
+message DeleteUserResponse {
+}
+
+message TestUserOnExistRequest {
+  string login = 1;
+  bytes  app_key = 3;
+}
+
+message TestUserOnExistResponse {
+  bool exist = 1;
 }
 
 // Permissions

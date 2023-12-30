@@ -55,4 +55,9 @@ func TestRegisterLogin(t *testing.T) {
 
 	// Проверяем, что TTL токена примерно соответствует нашим ожиданиям.
 	assert.InDelta(t, loginTime.Add(st.Cnf.TokenTTL).Unix(), claims["exp"].(float64), deltaSeconds)
+
+	// delete user
+
+	_, err = st.AuthClient.DeleteUser(ctx, &ssoV1.DeleteUserRequest{AppKey: appKey, Login: login})
+	require.NoError(t, err)
 }
