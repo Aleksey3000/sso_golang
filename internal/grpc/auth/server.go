@@ -13,17 +13,15 @@ import (
 
 type SSOServer struct {
 	ssoV1.UnimplementedAuthServer
-	ssoV1.UnimplementedAppsServer
 	ssoV1.UnimplementedPermissionsServer
 
 	auth        Auth
-	apps        Apps
 	permissions Permissions
+
+	apps Apps
 }
 
 type Apps interface {
-	NewApp(ctx context.Context) (key []byte, err error)
-	DeleteApp(ctx context.Context, key []byte) (err error)
 	TestOnExist(ctx context.Context, key []byte) bool
 }
 
@@ -42,11 +40,10 @@ type Permissions interface {
 func RegisterServer(server *grpc.Server, auth Auth, apps Apps, permissions Permissions) {
 	ssoServer := &SSOServer{
 		auth:        auth,
-		apps:        apps,
 		permissions: permissions,
+		apps:        apps,
 	}
 	ssoV1.RegisterAuthServer(server, ssoServer)
-	ssoV1.RegisterAppsServer(server, ssoServer)
 	ssoV1.RegisterPermissionsServer(server, ssoServer)
 }
 
@@ -120,26 +117,6 @@ func (s *SSOServer) TestUserOnExist(ctx context.Context, in *ssoV1.TestUserOnExi
 
 	exist := s.auth.TestOnExist(ctx, in.AppKey, in.Login)
 	return &ssoV1.TestUserOnExistResponse{Exist: exist}, nil
-}
-
-func (s *SSOServer) NewApp(ctx context.Context, _ *ssoV1.NewAppRequest) (*ssoV1.NewAppResponse, error) {
-	key, err := s.apps.NewApp(ctx)
-	if err != nil {
-		return nil, status.Error(codes.Internal, "failed create app")
-	}
-
-	return &ssoV1.NewAppResponse{Key: key}, nil
-}
-
-func (s *SSOServer) DeleteApp(ctx context.Context, in *ssoV1.DeleteAppRequest) (*ssoV1.DeleteAppResponse, error) {
-	if len(in.Key) == 0 {
-		return nil, status.Error(codes.InvalidArgument, "app key is required")
-	}
-	err := s.apps.DeleteApp(ctx, in.Key)
-	if err != nil {
-		return &ssoV1.DeleteAppResponse{}, status.Error(codes.Internal, "failed delete app")
-	}
-	return &ssoV1.DeleteAppResponse{}, nil
 }
 
 func (s *SSOServer) GetUserPermission(ctx context.Context, in *ssoV1.GetUserPermissionRequest) (*ssoV1.GetUserPermissionResponse, error) {

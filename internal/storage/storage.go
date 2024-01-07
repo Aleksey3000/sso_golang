@@ -22,6 +22,7 @@ type AppsStorage interface {
 	GetByKey(ctx context.Context, key []byte) (models.App, error)
 	DeleteByKey(ctx context.Context, key []byte) error
 	TestOnExist(ctx context.Context, key []byte) bool
+	GetAll(ctx context.Context) ([]*models.App, error)
 }
 
 type PermissionsStorage interface {

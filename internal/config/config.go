@@ -6,9 +6,10 @@ import (
 )
 
 type Config struct {
-	BindConfig BindConfig    `yaml:"bind"`
-	DBConfig   DBConfig      `yaml:"DB"`
-	TokenTTL   time.Duration `yaml:"token_TTL"`
+	GRPCBindConfig BindConfig    `yaml:"bind_grpc"`
+	HttpBindConfig BindConfig    `yaml:"bind_http"`
+	DBConfig       DBConfig      `yaml:"DB"`
+	TokenTTL       time.Duration `yaml:"token_TTL"`
 }
 
 type BindConfig struct {

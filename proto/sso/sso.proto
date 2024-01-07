@@ -3,10 +3,6 @@ package sso;
 
 option go_package = "sso.v1;ssov1";
 
-service Apps {
-  rpc NewApp(NewAppRequest) returns (NewAppResponse);
-  rpc DeleteApp(DeleteAppRequest) returns (DeleteAppResponse);
-}
 
 service Auth {
   rpc Register(RegisterRequest) returns (RegisterResponse);
@@ -18,22 +14,6 @@ service Auth {
 service Permissions {
   rpc SetUserPermission(SetUserPermissionRequest) returns (SetUserPermissionResponse);
   rpc GetUserPermission(GetUserPermissionRequest) returns (GetUserPermissionResponse);
-}
-
-// App
-
-message NewAppRequest {
-}
-
-message NewAppResponse {
-  bytes key = 1;
-}
-
-message DeleteAppRequest {
-  bytes key = 1;
-}
-
-message DeleteAppResponse {
 }
 
 // Auth

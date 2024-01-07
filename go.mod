@@ -11,6 +11,7 @@ require (
 	github.com/gookit/color v1.5.4 // indirect
 	github.com/gookit/goutil v0.6.12 // indirect
 	github.com/gookit/gsr v0.1.0 // indirect
+	github.com/gorilla/mux v1.8.1 // indirect
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.0.1 // indirect
 	github.com/ilyakaznacheev/cleanenv v1.5.0 // indirect
 	github.com/joho/godotenv v1.5.1 // indirect

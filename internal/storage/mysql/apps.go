@@ -52,3 +52,23 @@ func (a *AppStorage) TestOnExist(ctx context.Context, key []byte) bool {
 	_ = a.db.QueryRowContext(ctx, "SELECT COUNT(id) FROM apps WHERE secret_key=?", key).Scan(&count)
 	return count != 0
 }
+
+func (a *AppStorage) GetAll(ctx context.Context) ([]*models.App, error) {
+	const op = "mysql.AppStorage.GetAll"
+	var apps []*models.App
+
+	rows, err := a.db.QueryContext(ctx, "SELECT * FROM apps")
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	for rows.Next() {
+		var app models.App
+		if err := rows.Scan(&app.Id, &app.Key); err != nil {
+			return nil, err
+		}
+		apps = append(apps, &app)
+	}
+
+	return apps, nil
+}

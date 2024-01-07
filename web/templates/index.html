@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-4bw+/aepP/YC94hEpVNVgiZdgIC5+VKNBQNGCHeKRQN+PtmoHDEXuppvnDJzQIu9" crossorigin="anonymous">
+    <title>SSO</title>
+</head>
+<body>
+<script>
+    function GetApps() {
+        const request = new XMLHttpRequest();
+        request.open("POST", `/get_apps`, true);
+        request.send();
+        request.onload = () => {
+            if (request.responseText === "error") {
+                alert("Произошла ошибка при получении списка приложений");
+                return
+            }
+
+            let apps = JSON.parse(request.responseText);
+            let htmlList = "";
+            for (let app of apps) {
+                htmlList += `<p>${app.id}: ${app.key}</p><a href="javascript:DeleteApp('${app.key}')">Удалить</a>`;
+            }
+            document.getElementById("apps").innerHTML = htmlList;
+        }
+
+    }
+    function DeleteApp(key) {
+        let result = confirm("Удалить приложение?");
+        if (result) {
+            const request = new XMLHttpRequest();
+            request.open("POST", `/delete_app?key=${key}`, true);
+            request.send();
+            request.onload = () => {
+                if (request.responseText === "error") {
+                    alert("Произошла ошибка при удалении приложения");
+                }
+                GetApps()
+            }
+
+        }
+    }
+    function NewApp() {
+        const request = new XMLHttpRequest();
+        request.open("POST", `/new_app`, true);
+        request.send();
+        if (request.responseText === "error") {
+            alert("Произошла ошибка создании приложения");
+            return
+        }
+        request.onload = () => {
+            console.log(request.responseText)
+            let app = JSON.parse(request.responseText);
+            GetApps()
+            alert(app.key)
+        }
+
+    }
+
+    GetApps()
+
+</script>
+<div class="content">
+    <h1>SSO service</h1>
+    <br>
+    <div id="apps"></div>
+    <a href="javascript:NewApp()">Создать приложение</a>
+</div>
+</body>
+</html>

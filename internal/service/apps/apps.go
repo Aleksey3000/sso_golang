@@ -1,6 +1,7 @@
 package apps
 
 import (
+	"SSO/internal/domain/models"
 	"SSO/internal/storage"
 	"context"
 	"crypto/sha256"
@@ -38,6 +39,10 @@ func (a *Apps) DeleteApp(ctx context.Context, key []byte) error {
 
 func (a *Apps) TestOnExist(ctx context.Context, key []byte) bool {
 	return a.appsStorage.TestOnExist(ctx, key)
+}
+
+func (a *Apps) GetAll(ctx context.Context) ([]*models.App, error) {
+	return a.appsStorage.GetAll(ctx)
 }
 
 var mu sync.Mutex
