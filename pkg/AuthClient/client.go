@@ -58,6 +58,14 @@ func (c *Client) DeleteUser(ctx context.Context, login string) error {
 	return err
 }
 
+func (c *Client) ParseToken(ctx context.Context, token string) (login string, err error) {
+	req, err := c.authClient.ParseToken(ctx, &ssoV1.ParseTokenRequest{
+		AppKey: c.appKey,
+		Token:  token,
+	})
+	return req.Login, err
+}
+
 func (c *Client) TestUserOnExist(ctx context.Context, login string) (bool, error) {
 	req, err := c.authClient.TestUserOnExist(ctx, &ssoV1.TestUserOnExistRequest{
 		AppKey: c.appKey,
@@ -66,18 +74,18 @@ func (c *Client) TestUserOnExist(ctx context.Context, login string) (bool, error
 	return req.Exist, err
 }
 
-func (c *Client) GetPermission(ctx context.Context, userId int) (int32, error) {
+func (c *Client) GetPermission(ctx context.Context, login string) (int32, error) {
 	req, err := c.permissionClient.GetUserPermission(ctx, &ssoV1.GetUserPermissionRequest{
 		AppKey: c.appKey,
-		UserId: int64(userId),
+		Login:  login,
 	})
 	return req.Permission, err
 }
 
-func (c *Client) SetPermission(ctx context.Context, userId int, permission int32) error {
+func (c *Client) SetPermission(ctx context.Context, login string, permission int32) error {
 	_, err := c.permissionClient.SetUserPermission(ctx, &ssoV1.SetUserPermissionRequest{
 		AppKey:     c.appKey,
-		UserId:     int64(userId),
+		Login:      login,
 		Permission: permission,
 	})
 	return err

@@ -106,6 +106,29 @@ func (a *Auth) TestOnExist(ctx context.Context, appKey []byte, login string) boo
 	return exist
 }
 
+func (a *Auth) GetUserId(ctx context.Context, appKey []byte, login string) (int64, error) {
+	app, err := a.appsProvider.GetByKey(ctx, appKey)
+	if err != nil {
+		a.l.Error("failed get app", Err(err))
+		return 0, err
+	}
+	user, err := a.userStorage.Get(ctx, app.Id, login)
+	if err != nil {
+		a.l.Error("failed test user on exist", Err(err))
+		return 0, err
+	}
+	return user.Id, nil
+}
+
+func (a *Auth) ParseToken(ctx context.Context, appKey []byte, token string) (string, error) {
+	login, err := jwt.ParseToken(token, appKey)
+	if err != nil {
+		a.l.Warn(err.Error())
+		return "", err
+	}
+	return login, nil
+}
+
 func Err(err error) slog.Attr {
 	return slog.Attr{
 		Key:   "error",

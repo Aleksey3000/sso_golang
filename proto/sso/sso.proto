@@ -9,6 +9,7 @@ service Auth {
   rpc Login(LoginRequest) returns (LoginResponse);
   rpc DeleteUser(DeleteUserRequest) returns (DeleteUserResponse);
   rpc TestUserOnExist(TestUserOnExistRequest) returns (TestUserOnExistResponse);
+  rpc ParseToken(ParseTokenRequest) returns (ParseTokenResponse);
 }
 
 service Permissions {
@@ -54,11 +55,20 @@ message TestUserOnExistResponse {
   bool exist = 1;
 }
 
+message ParseTokenRequest {
+  bytes app_key = 1;
+  string token = 2;
+}
+
+message ParseTokenResponse {
+  string login = 1;
+}
+
 // Permissions
 
 message GetUserPermissionRequest {
-  int64 user_id = 1;
-  bytes app_key = 2;
+  bytes app_key = 1;
+  string login = 2;
 }
 
 message GetUserPermissionResponse {
@@ -66,9 +76,9 @@ message GetUserPermissionResponse {
 }
 
 message SetUserPermissionRequest {
-  int64 user_id = 1;
-  int32 permission = 2;
-  bytes app_key = 3;
+  bytes app_key = 1;
+  string login = 2;
+  int32 permission = 3;
 }
 
 message SetUserPermissionResponse {

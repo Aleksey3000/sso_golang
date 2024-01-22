@@ -30,11 +30,13 @@ type Auth interface {
 	Login(ctx context.Context, appKey []byte, login string, password string) (token string, err error)
 	DeleteUser(ctx context.Context, appKey []byte, login string) (err error)
 	TestOnExist(ctx context.Context, appKey []byte, login string) bool
+	GetUserId(ctx context.Context, appKey []byte, login string) (int64, error)
+	ParseToken(ctx context.Context, appKey []byte, token string) (string, error)
 }
 
 type Permissions interface {
-	SetUserPermission(ctx context.Context, userId int, permission int32) (err error)
-	GetUserPermission(ctx context.Context, userId int) (permission int32, err error)
+	SetUserPermission(ctx context.Context, userId int64, permission int32) (err error)
+	GetUserPermission(ctx context.Context, userId int64) (permission int32, err error)
 }
 
 func RegisterServer(server *grpc.Server, auth Auth, apps Apps, permissions Permissions) {
@@ -119,17 +121,37 @@ func (s *SSOServer) TestUserOnExist(ctx context.Context, in *ssoV1.TestUserOnExi
 	return &ssoV1.TestUserOnExistResponse{Exist: exist}, nil
 }
 
+func (s *SSOServer) ParseToken(ctx context.Context, in *ssoV1.ParseTokenRequest) (*ssoV1.ParseTokenResponse, error) {
+	if in.Token == "" {
+		return nil, status.Error(codes.InvalidArgument, "token is required")
+	}
+	if len(in.AppKey) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "app key is required")
+	}
+	login, err := s.auth.ParseToken(ctx, in.AppKey, in.Token)
+	if err != nil {
+		return nil, status.Errorf(codes.Unauthenticated, "err in parse token: %s", err.Error())
+	}
+	return &ssoV1.ParseTokenResponse{Login: login}, err
+}
+
 func (s *SSOServer) GetUserPermission(ctx context.Context, in *ssoV1.GetUserPermissionRequest) (*ssoV1.GetUserPermissionResponse, error) {
 	if len(in.AppKey) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "app key is required")
 	}
-	if in.UserId == 0 {
-		return nil, status.Error(codes.InvalidArgument, "user id is required")
+	if in.Login == "" {
+		return nil, status.Error(codes.InvalidArgument, "login is required")
 	}
 	if !s.apps.TestOnExist(ctx, in.AppKey) {
 		return nil, status.Error(codes.FailedPrecondition, "app not found")
 	}
-	perm, err := s.permissions.GetUserPermission(ctx, int(in.UserId))
+
+	id, err := s.auth.GetUserId(ctx, in.AppKey, in.Login)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "user not found")
+	}
+
+	perm, err := s.permissions.GetUserPermission(ctx, id)
 	if err != nil {
 		return nil, status.Error(codes.Internal, "failed get user permission")
 	}
@@ -140,14 +162,19 @@ func (s *SSOServer) SetUserPermission(ctx context.Context, in *ssoV1.SetUserPerm
 	if len(in.AppKey) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "app key is required")
 	}
-	if in.UserId == 0 {
-		return nil, status.Error(codes.InvalidArgument, "user id is required")
+	if in.Login == "" {
+		return nil, status.Error(codes.InvalidArgument, "login is required")
 	}
 	if !s.apps.TestOnExist(ctx, in.AppKey) {
 		return nil, status.Error(codes.FailedPrecondition, "app not found")
 	}
-	err := s.permissions.SetUserPermission(ctx, int(in.UserId), in.Permission)
+
+	id, err := s.auth.GetUserId(ctx, in.AppKey, in.Login)
 	if err != nil {
+		return nil, status.Error(codes.Internal, "user not found")
+	}
+
+	if err := s.permissions.SetUserPermission(ctx, id, in.Permission); err != nil {
 		return nil, status.Error(codes.Internal, "failed set permission")
 	}
 	return &ssoV1.SetUserPermissionResponse{}, nil

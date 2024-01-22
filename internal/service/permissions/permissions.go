@@ -19,7 +19,7 @@ func New(l *slog.Logger, permStorage storage.PermissionsStorage) *Permissions {
 	}
 }
 
-func (p *Permissions) SetUserPermission(ctx context.Context, userId int, permission int32) (err error) {
+func (p *Permissions) SetUserPermission(ctx context.Context, userId int64, permission int32) (err error) {
 	const op = "service.permissions.SetUserPermission"
 	if err := p.permStorage.Save(ctx, userId, permission); err != nil {
 		p.l.Error(fmt.Errorf("%s: %w", op, err).Error())
@@ -28,7 +28,7 @@ func (p *Permissions) SetUserPermission(ctx context.Context, userId int, permiss
 	return nil
 }
 
-func (p *Permissions) GetUserPermission(ctx context.Context, userId int) (permission int32, err error) {
+func (p *Permissions) GetUserPermission(ctx context.Context, userId int64) (permission int32, err error) {
 	const op = "service.permissions.GetUserPermission"
 	perm, err := p.permStorage.Get(ctx, userId)
 	if err != nil {

@@ -26,10 +26,10 @@ type AppsStorage interface {
 }
 
 type PermissionsStorage interface {
-	Save(ctx context.Context, userId int, value int32) error
-	Get(ctx context.Context, userId int) (int32, error)
-	Update(ctx context.Context, userId int, value int32) error
-	Delete(ctx context.Context, userId int) error
+	Save(ctx context.Context, userId int64, value int32) error
+	Get(ctx context.Context, userId int64) (int32, error)
+	Update(ctx context.Context, userId int64, value int32) error
+	Delete(ctx context.Context, userId int64) error
 }
 
 type Storage struct {
