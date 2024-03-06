@@ -22,9 +22,10 @@ func New(l *slog.Logger, cnf *config.Config) *App {
 		panic(err)
 	}
 
-	authService := auth.New(l, s.UserStorage, s.AppStorage, cnf.TokenTTL)
-	appsService := apps.New(l, s.AppStorage)
 	permService := permissions.New(l, s.PermissionsStorage)
+	authService := auth.New(l, s.UserStorage, s.AppStorage, permService, cnf.TokenTTL)
+	appsService := apps.New(l, s.AppStorage)
+
 	grpcApp := GrpcApp.New(l, authService, appsService, permService, &cnf.GRPCBindConfig)
 	httpApp := HttpApp.NewHttpApp(appsService, &cnf.HttpBindConfig)
 

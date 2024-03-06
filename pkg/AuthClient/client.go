@@ -58,6 +58,15 @@ func (c *Client) DeleteUser(ctx context.Context, login string) error {
 	return err
 }
 
+func (c *Client) UpdateLogin(ctx context.Context, login string, newLogin string) error {
+	_, err := c.authClient.UpdateLogin(ctx, &ssoV1.UpdateLoginRequest{
+		AppKey:   c.appKey,
+		Login:    login,
+		NewLogin: newLogin,
+	})
+	return err
+}
+
 func (c *Client) ParseToken(ctx context.Context, token string) (login string, err error) {
 	req, err := c.authClient.ParseToken(ctx, &ssoV1.ParseTokenRequest{
 		AppKey: c.appKey,

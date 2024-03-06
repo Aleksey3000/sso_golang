@@ -29,6 +29,7 @@ type Auth interface {
 	Register(ctx context.Context, appKey []byte, login string, password string) (err error)
 	Login(ctx context.Context, appKey []byte, login string, password string) (token string, err error)
 	DeleteUser(ctx context.Context, appKey []byte, login string) (err error)
+	UpdateLogin(ctx context.Context, appKey []byte, login string, newLogin string) error
 	TestOnExist(ctx context.Context, appKey []byte, login string) bool
 	GetUserId(ctx context.Context, appKey []byte, login string) (int64, error)
 	ParseToken(ctx context.Context, appKey []byte, token string) (string, error)
@@ -107,6 +108,23 @@ func (s *SSOServer) DeleteUser(ctx context.Context, in *ssoV1.DeleteUserRequest)
 		return nil, status.Error(codes.Internal, "failed delete user")
 	}
 	return &ssoV1.DeleteUserResponse{}, err
+}
+
+func (s *SSOServer) UpdateLogin(ctx context.Context, in *ssoV1.UpdateLoginRequest) (*ssoV1.UpdateLoginResponse, error) {
+	if in.Login == "" {
+		return nil, status.Error(codes.InvalidArgument, "login is required")
+	}
+	if in.NewLogin == "" {
+		return nil, status.Error(codes.InvalidArgument, "new login is required")
+	}
+	if len(in.AppKey) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "app key is required")
+	}
+	err := s.auth.UpdateLogin(ctx, in.AppKey, in.Login, in.NewLogin)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "failed update login")
+	}
+	return &ssoV1.UpdateLoginResponse{}, err
 }
 
 func (s *SSOServer) TestUserOnExist(ctx context.Context, in *ssoV1.TestUserOnExistRequest) (*ssoV1.TestUserOnExistResponse, error) {

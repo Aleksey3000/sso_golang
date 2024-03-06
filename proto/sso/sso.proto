@@ -10,6 +10,7 @@ service Auth {
   rpc DeleteUser(DeleteUserRequest) returns (DeleteUserResponse);
   rpc TestUserOnExist(TestUserOnExistRequest) returns (TestUserOnExistResponse);
   rpc ParseToken(ParseTokenRequest) returns (ParseTokenResponse);
+  rpc UpdateLogin(UpdateLoginRequest) returns (UpdateLoginResponse);
 }
 
 service Permissions {
@@ -62,6 +63,14 @@ message ParseTokenRequest {
 
 message ParseTokenResponse {
   string login = 1;
+}
+message UpdateLoginRequest {
+  bytes app_key = 1;
+  string login = 2;
+  string new_login = 3;
+}
+
+message UpdateLoginResponse {
 }
 
 // Permissions

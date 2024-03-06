@@ -51,6 +51,14 @@ func (u *UserStorage) Delete(ctx context.Context, appId int32, login string) err
 	return nil
 }
 
+func (u *UserStorage) UpdateLogin(ctx context.Context, appId int32, login string, newLogin string) error {
+	const op = "userStorage.UpdateLogin"
+	if _, err := u.db.ExecContext(ctx, "UPDATE users SET login=? WHERE app_id=? AND login=?;", newLogin, appId, login); err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+	return nil
+}
+
 func (u *UserStorage) TestOnExist(ctx context.Context, appId int32, login string) (bool, error) {
 	const op = "userStorage.TestOnExist"
 	var count int

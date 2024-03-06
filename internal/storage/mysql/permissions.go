@@ -35,12 +35,16 @@ func (p *PermissionsStorage) Get(ctx context.Context, userId int64) (int32, erro
 
 func (p *PermissionsStorage) Update(ctx context.Context, userId int64, value int32) error {
 	const op = "PermissionsStorage.Update"
-	//todo
+	if _, err := p.db.ExecContext(ctx, "UPDATE permissions SET permission=? WHERE user_id=?;", value, userId); err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
 	return nil
 }
 
 func (p *PermissionsStorage) Delete(ctx context.Context, userId int64) error {
 	const op = "PermissionsStorage.Delete"
-	// todo
+	if _, err := p.db.ExecContext(ctx, "DELETE FROM permissions WHERE user_id=?;", userId); err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
 	return nil
 }
