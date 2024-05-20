@@ -44,12 +44,13 @@ func New(l *slog.Logger, userStorage storage.UserStorage, appProvider AppsProvid
 }
 
 func (a *Auth) Register(ctx context.Context, appKey []byte, login string, password string) error {
-	passHash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	passHash, err := a.HashPassword(password)
 	if err != nil {
 		return err
 	}
 	app, err := a.appsProvider.GetByKey(ctx, appKey)
 	if err != nil {
+		a.l.Error("failed get app", Err(err))
 		return err
 	}
 	if _, err := a.userStorage.Get(ctx, app.Id, login); err == nil {
@@ -143,6 +144,23 @@ func (a *Auth) UpdateLogin(ctx context.Context, appKey []byte, login string, new
 	return nil
 }
 
+func (a *Auth) ChangePassword(ctx context.Context, appKey []byte, login string, newPass string) error {
+	app, err := a.appsProvider.GetByKey(ctx, appKey)
+	if err != nil {
+		a.l.Error("failed get app", Err(err))
+		return err
+	}
+	passHash, err := a.HashPassword(newPass)
+	if err != nil {
+		return err
+	}
+	if err := a.userStorage.UpdatePassword(ctx, app.Id, login, passHash); err != nil {
+		a.l.Error("failed change password", Err(err))
+		return err
+	}
+	return nil
+}
+
 func (a *Auth) GetUserId(ctx context.Context, appKey []byte, login string) (int64, error) {
 	app, err := a.appsProvider.GetByKey(ctx, appKey)
 	if err != nil {
@@ -164,6 +182,14 @@ func (a *Auth) ParseToken(ctx context.Context, appKey []byte, token string) (str
 		return "", err
 	}
 	return login, nil
+}
+
+func (a *Auth) HashPassword(password string) (passwordHash []byte, err error) {
+	passwordHash, err = bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return nil, err
+	}
+	return passwordHash, nil
 }
 
 func Err(err error) slog.Attr {

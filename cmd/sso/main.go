@@ -3,6 +3,7 @@ package main
 import (
 	"SSO/internal/app"
 	"SSO/internal/config"
+	"fmt"
 	"log/slog"
 	"os"
 )
@@ -15,8 +16,8 @@ func main() {
 		panic(err)
 	}
 	l := SetupLogger()
-	l.Info("Config: ", cnf)
-	l.Info("PATH ", os.Args[0])
+	l.Info(fmt.Sprintf("Config: %+v", cnf))
+	l.Info(fmt.Sprintf("PATH: %+v", os.Args[0]))
 	App := app.New(l, cnf)
 	defer App.GRPCApp.Stop()
 

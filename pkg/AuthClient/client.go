@@ -18,7 +18,8 @@ func New(host string, port string, appKey string) (*Client, error) {
 	addr := net.JoinHostPort(host, port)
 	cc, err := grpc.DialContext(context.Background(),
 		addr,
-		grpc.WithTransportCredentials(insecure.NewCredentials()))
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	)
 
 	if err != nil {
 		return nil, err
@@ -63,6 +64,15 @@ func (c *Client) UpdateLogin(ctx context.Context, login string, newLogin string)
 		AppKey:   c.appKey,
 		Login:    login,
 		NewLogin: newLogin,
+	})
+	return err
+}
+
+func (c *Client) ChangePassword(ctx context.Context, login string, newPassword string) error {
+	_, err := c.authClient.ChangePassword(ctx, &ssoV1.ChangePasswordRequest{
+		AppKey:      c.appKey,
+		Login:       login,
+		NewPassword: newPassword,
 	})
 	return err
 }

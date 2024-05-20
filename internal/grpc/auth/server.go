@@ -30,6 +30,7 @@ type Auth interface {
 	Login(ctx context.Context, appKey []byte, login string, password string) (token string, err error)
 	DeleteUser(ctx context.Context, appKey []byte, login string) (err error)
 	UpdateLogin(ctx context.Context, appKey []byte, login string, newLogin string) error
+	ChangePassword(ctx context.Context, appKey []byte, login string, newPass string) error
 	TestOnExist(ctx context.Context, appKey []byte, login string) bool
 	GetUserId(ctx context.Context, appKey []byte, login string) (int64, error)
 	ParseToken(ctx context.Context, appKey []byte, token string) (string, error)
@@ -50,7 +51,12 @@ func RegisterServer(server *grpc.Server, auth Auth, apps Apps, permissions Permi
 	ssoV1.RegisterPermissionsServer(server, ssoServer)
 }
 
+var ErrNilRequest = errors.New("nil request")
+
 func (s *SSOServer) Register(ctx context.Context, in *ssoV1.RegisterRequest) (*ssoV1.RegisterResponse, error) {
+	if in == nil {
+		return nil, ErrNilRequest
+	}
 	if in.Login == "" {
 		return nil, status.Error(codes.InvalidArgument, "email is required")
 	}
@@ -75,6 +81,9 @@ func (s *SSOServer) Register(ctx context.Context, in *ssoV1.RegisterRequest) (*s
 }
 
 func (s *SSOServer) Login(ctx context.Context, in *ssoV1.LoginRequest) (*ssoV1.LoginResponse, error) {
+	if in == nil {
+		return nil, ErrNilRequest
+	}
 	if in.Login == "" {
 		return nil, status.Error(codes.InvalidArgument, "login is required")
 	}
@@ -97,6 +106,9 @@ func (s *SSOServer) Login(ctx context.Context, in *ssoV1.LoginRequest) (*ssoV1.L
 }
 
 func (s *SSOServer) DeleteUser(ctx context.Context, in *ssoV1.DeleteUserRequest) (*ssoV1.DeleteUserResponse, error) {
+	if in == nil {
+		return nil, ErrNilRequest
+	}
 	if in.Login == "" {
 		return nil, status.Error(codes.InvalidArgument, "login is required")
 	}
@@ -111,6 +123,9 @@ func (s *SSOServer) DeleteUser(ctx context.Context, in *ssoV1.DeleteUserRequest)
 }
 
 func (s *SSOServer) UpdateLogin(ctx context.Context, in *ssoV1.UpdateLoginRequest) (*ssoV1.UpdateLoginResponse, error) {
+	if in == nil {
+		return nil, ErrNilRequest
+	}
 	if in.Login == "" {
 		return nil, status.Error(codes.InvalidArgument, "login is required")
 	}
@@ -127,7 +142,30 @@ func (s *SSOServer) UpdateLogin(ctx context.Context, in *ssoV1.UpdateLoginReques
 	return &ssoV1.UpdateLoginResponse{}, err
 }
 
+func (s *SSOServer) ChangePassword(ctx context.Context, in *ssoV1.ChangePasswordRequest) (*ssoV1.ChangePasswordResponse, error) {
+	if in == nil {
+		return nil, ErrNilRequest
+	}
+	if in.Login == "" {
+		return nil, status.Error(codes.InvalidArgument, "login is required")
+	}
+	if len(in.AppKey) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "app key is required")
+	}
+	if in.NewPassword == "" {
+		return nil, status.Error(codes.InvalidArgument, "new password is required")
+	}
+	if err := s.auth.ChangePassword(ctx, in.AppKey, in.Login, in.NewPassword); err != nil {
+		return nil, status.Error(codes.Internal, "failed change password")
+	}
+
+	return &ssoV1.ChangePasswordResponse{}, nil
+}
+
 func (s *SSOServer) TestUserOnExist(ctx context.Context, in *ssoV1.TestUserOnExistRequest) (*ssoV1.TestUserOnExistResponse, error) {
+	if in == nil {
+		return nil, ErrNilRequest
+	}
 	if in.Login == "" {
 		return nil, status.Error(codes.InvalidArgument, "login is required")
 	}
@@ -140,6 +178,9 @@ func (s *SSOServer) TestUserOnExist(ctx context.Context, in *ssoV1.TestUserOnExi
 }
 
 func (s *SSOServer) ParseToken(ctx context.Context, in *ssoV1.ParseTokenRequest) (*ssoV1.ParseTokenResponse, error) {
+	if in == nil {
+		return nil, ErrNilRequest
+	}
 	if in.Token == "" {
 		return nil, status.Error(codes.InvalidArgument, "token is required")
 	}
@@ -154,6 +195,9 @@ func (s *SSOServer) ParseToken(ctx context.Context, in *ssoV1.ParseTokenRequest)
 }
 
 func (s *SSOServer) GetUserPermission(ctx context.Context, in *ssoV1.GetUserPermissionRequest) (*ssoV1.GetUserPermissionResponse, error) {
+	if in == nil {
+		return nil, ErrNilRequest
+	}
 	if len(in.AppKey) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "app key is required")
 	}
@@ -177,6 +221,9 @@ func (s *SSOServer) GetUserPermission(ctx context.Context, in *ssoV1.GetUserPerm
 }
 
 func (s *SSOServer) SetUserPermission(ctx context.Context, in *ssoV1.SetUserPermissionRequest) (*ssoV1.SetUserPermissionResponse, error) {
+	if in == nil {
+		return nil, ErrNilRequest
+	}
 	if len(in.AppKey) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "app key is required")
 	}

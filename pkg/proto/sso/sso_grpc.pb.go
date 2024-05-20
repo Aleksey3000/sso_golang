@@ -28,6 +28,7 @@ type AuthClient interface {
 	TestUserOnExist(ctx context.Context, in *TestUserOnExistRequest, opts ...grpc.CallOption) (*TestUserOnExistResponse, error)
 	ParseToken(ctx context.Context, in *ParseTokenRequest, opts ...grpc.CallOption) (*ParseTokenResponse, error)
 	UpdateLogin(ctx context.Context, in *UpdateLoginRequest, opts ...grpc.CallOption) (*UpdateLoginResponse, error)
+	ChangePassword(ctx context.Context, in *ChangePasswordRequest, opts ...grpc.CallOption) (*ChangePasswordResponse, error)
 }
 
 type authClient struct {
@@ -92,6 +93,15 @@ func (c *authClient) UpdateLogin(ctx context.Context, in *UpdateLoginRequest, op
 	return out, nil
 }
 
+func (c *authClient) ChangePassword(ctx context.Context, in *ChangePasswordRequest, opts ...grpc.CallOption) (*ChangePasswordResponse, error) {
+	out := new(ChangePasswordResponse)
+	err := c.cc.Invoke(ctx, "/sso.Auth/ChangePassword", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // AuthServer is the server API for Auth service.
 // All implementations must embed UnimplementedAuthServer
 // for forward compatibility
@@ -102,6 +112,7 @@ type AuthServer interface {
 	TestUserOnExist(context.Context, *TestUserOnExistRequest) (*TestUserOnExistResponse, error)
 	ParseToken(context.Context, *ParseTokenRequest) (*ParseTokenResponse, error)
 	UpdateLogin(context.Context, *UpdateLoginRequest) (*UpdateLoginResponse, error)
+	ChangePassword(context.Context, *ChangePasswordRequest) (*ChangePasswordResponse, error)
 	mustEmbedUnimplementedAuthServer()
 }
 
@@ -126,6 +137,9 @@ func (UnimplementedAuthServer) ParseToken(context.Context, *ParseTokenRequest) (
 }
 func (UnimplementedAuthServer) UpdateLogin(context.Context, *UpdateLoginRequest) (*UpdateLoginResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateLogin not implemented")
+}
+func (UnimplementedAuthServer) ChangePassword(context.Context, *ChangePasswordRequest) (*ChangePasswordResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ChangePassword not implemented")
 }
 func (UnimplementedAuthServer) mustEmbedUnimplementedAuthServer() {}
 
@@ -248,6 +262,24 @@ func _Auth_UpdateLogin_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Auth_ChangePassword_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ChangePasswordRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuthServer).ChangePassword(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/sso.Auth/ChangePassword",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthServer).ChangePassword(ctx, req.(*ChangePasswordRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Auth_ServiceDesc is the grpc.ServiceDesc for Auth service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -278,6 +310,10 @@ var Auth_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateLogin",
 			Handler:    _Auth_UpdateLogin_Handler,
+		},
+		{
+			MethodName: "ChangePassword",
+			Handler:    _Auth_ChangePassword_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

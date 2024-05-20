@@ -15,6 +15,7 @@ type UserStorage interface {
 	Get(ctx context.Context, appId int32, login string) (models.User, error)
 	Delete(ctx context.Context, appId int32, login string) error
 	UpdateLogin(ctx context.Context, appId int32, login string, newLogin string) error
+	UpdatePassword(ctx context.Context, appId int32, login string, passwordHash []byte) error
 	TestOnExist(ctx context.Context, appId int32, login string) (bool, error)
 }
 

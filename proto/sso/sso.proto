@@ -11,6 +11,7 @@ service Auth {
   rpc TestUserOnExist(TestUserOnExistRequest) returns (TestUserOnExistResponse);
   rpc ParseToken(ParseTokenRequest) returns (ParseTokenResponse);
   rpc UpdateLogin(UpdateLoginRequest) returns (UpdateLoginResponse);
+  rpc ChangePassword(ChangePasswordRequest) returns (ChangePasswordResponse);
 }
 
 service Permissions {
@@ -71,6 +72,15 @@ message UpdateLoginRequest {
 }
 
 message UpdateLoginResponse {
+}
+
+message ChangePasswordRequest {
+  bytes app_key = 1;
+  string login = 2;
+  string new_password = 3;
+}
+
+message ChangePasswordResponse {
 }
 
 // Permissions

@@ -59,6 +59,14 @@ func (u *UserStorage) UpdateLogin(ctx context.Context, appId int32, login string
 	return nil
 }
 
+func (u *UserStorage) UpdatePassword(ctx context.Context, appId int32, login string, passwordHash []byte) error {
+	const op = "userStorage.UpdatePassword"
+	if _, err := u.db.ExecContext(ctx, "UPDATE users SET password=? WHERE app_id=? AND login=?;", passwordHash, appId, login); err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+	return nil
+}
+
 func (u *UserStorage) TestOnExist(ctx context.Context, appId int32, login string) (bool, error) {
 	const op = "userStorage.TestOnExist"
 	var count int
